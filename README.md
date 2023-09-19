@@ -1,10 +1,10 @@
-# powerplant-coding-challenge
+###### powerplant-coding-challenge
 
 - The goal of this application is to provide a solution for the powerplant-coding-challenge.
 
 - The solution is Domain-Driven Design (DDD)-based or simply well-factored, SOLID applications using .NET Core. Learn more about these 
 
-### topics here:
+##### topics here:
 
 - SOLID Principles for C# Developers SOLID Principles of Object Oriented Design (the original, longer course)
 
@@ -54,23 +54,23 @@ Moq I'm using Moq as a mocking framework for white box behavior-based tests. If 
 
 Microsoft.AspNetCore.TestHost I'm using TestHost to test my web project using its full stack, not just unit testing action methods. Using TestHost, you make actual HttpClient requests without going over the wire (so no firewall or port configuration issues). Tests run in memory and are very fast, and requests exercise the full MVC stack, including routing, model binding, model validation, filters, etc.
 
-###### Run the Application
+### Run the Application
 
 ## using dotnet command
 
 navigate to the start up project folder (Web project) using commad
 
-## cd src/web
+# cd src/web
 
 then run 
 
-## dotnet run web.csproj
+# dotnet run web.csproj
 
 it will build and start the application in http://localhost:8888
 
 use http://localhost:8888/swagger for swagger documentation.
 
-### using Docker
+## using Docker
 
 # start the Docker (I am using Docker desktop and linux containers)
 open Docker file location in command prompt, in this project Dockerfile is placed in the Root Directory along with src and tests folders.
@@ -93,7 +93,7 @@ the docker is designed to expose the http port in 8888
 
 use http://localhost:8888/swagger for swagger documentation.
 
-### using visual studio
+## using visual studio
 
 open the solution in visual studio and web project as a start up project.
 
@@ -101,7 +101,7 @@ then press the green Start button on the Visual Studio toolbar, or press F5 or C
 
 F5 will start the application in debugger mode. it will open the swagger url automatically in your default browser.
 
-### Test the application using visual studio
+## Test the application using visual studio
 Open Test Explorer. To open Test Explorer, choose Test > Test Explorer from the top menu bar (or press Ctrl + E, T).
 Run your unit tests and integration test by clicking Run All (or press Ctrl + R, V).
 
