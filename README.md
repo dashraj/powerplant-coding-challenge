@@ -1,99 +1,108 @@
 # powerplant-coding-challenge
 
+- The goal of this application is to provide a solution for the powerplant-coding-challenge.
 
-## Welcome !
+- The solution is Domain-Driven Design (DDD)-based or simply well-factored, SOLID applications using .NET Core. Learn more about these 
 
-Below you can find the description of a coding challenge that we ask people to perform when applying for a job in our team.
+### topics here:
 
-The goal of this coding challenge is to provide the applicant some insight into the business we're in and as such provide the applicant an indication about the challenges she/he will be confronted with. Next, during the first interview we will use the applicant's implementation as a seed to discuss all kinds of interesting software engineering topics.  
+- SOLID Principles for C# Developers SOLID Principles of Object Oriented Design (the original, longer course)
 
-Time is scarce, we know. Therefore we ask you not to spend more than 4 hours on this challenge. We know it is not possible to deliver a finished implementation of the challenge in only four hours. Even though your submission will not be complete, it will provide us plenty of information and topics to discuss later on during the talks.
+## Domain-Driven Design:
 
-This coding-challenge is part of a formal process and is used in collaboration with the recruiting companies we work with.  Submitting a pull-request will not automatically trigger the recruitement process.
-## Who are we 
+# The Application Contract Project: 
+    - This provides the service contracts to the Web Layer. the following properties involves in this layer
 
-We are the IS team of the 'Short-term Power as-a-Service' (a.k.a. SPaaS) team within [GEM](https://gems.engie.com/).
+      - DTOs
+      -  Manager Interfaces
 
-[GEM](https://gems.engie.com/), which stands for 'Global Energy Management', is the energy management arm of [ENGIE](https://www.engie.com/), one of the largest global energy players, 
-with access to local markets all over the world.  
+# The Application Project: 
+ - This Layer covers the implemetation of the service contacts and the unit of work (Calling the other microservices and Domain services) And other non domain oriented service implementations are done here.
 
-SPaaS is a team consisting of around 100 people with experience in energy markets, IT and modeling. In smaller teams consisting of a mix of people with different experiences, we are active on the [day-ahead](https://en.wikipedia.org/wiki/European_Power_Exchange#Day-ahead_markets) market, [intraday markets](https://en.wikipedia.org/wiki/European_Power_Exchange#Intraday_markets) and [collaborate with the TSO to balance the grid continuously](https://en.wikipedia.org/wiki/Transmission_system_operator#Electricity_market_operations).
-
-## The challenge
-
-### In short
-Calculate how much power each of a multitude of different [powerplants](https://en.wikipedia.org/wiki/Power_station) need to produce (a.k.a. the production-plan) when the [load](https://en.wikipedia.org/wiki/Load_profile) is given and taking into account the cost of the underlying energy sources (gas,  kerosine) and the Pmin and Pmax of each powerplant.
-
-### More in detail
-
-The load is the continuous demand of power. The total load at each moment in time is forecasted. For instance for Belgium you can see the load forecasted by the grid operator [here](https://www.elia.be/en/grid-data/load-and-load-forecasts).
-
-At any moment in time, all available powerplants need to generate the power to exactly match the load.  The cost of generating power can be different for every powerplant and is dependent on external factors: The cost of producing power using a [turbojet](https://en.wikipedia.org/wiki/Gas_turbine#Industrial_gas_turbines_for_power_generation), that runs on kerosine, is higher compared to the cost of generating power using a gas-fired powerplant because of gas being cheaper compared to kerosine and because of the [thermal efficiency](https://en.wikipedia.org/wiki/Thermal_efficiency) of a gas-fired powerplant being around 50% (2 units of gas will generate 1 unit of electricity) while that of a turbojet is only around 30%.  The cost of generating power using windmills however is zero. Thus deciding which powerplants to activate is dependent on the [merit-order](https://en.wikipedia.org/wiki/Merit_order).
-
-When deciding which powerplants in the merit-order to activate (a.k.a. [unit-commitment problem](https://en.wikipedia.org/wiki/Unit_commitment_problem_in_electrical_power_production)) the maximum amount of power each powerplant can produce (Pmax) obviously needs to be taken into account.  Additionally gas-fired powerplants generate a certain minimum amount of power when switched on, called the Pmin. 
+          - Service Implementations
+          - UnitOfWork
+          - Other non Domain services
 
 
-### Performing the challenge
+# The Domain(Core) Project:
 
-Build a REST API exposing an endpoint `/productionplan` that accepts a POST of which the body contains a payload as you can find in the `example_payloads` directory and that returns a json with the same structure as in `example_response.json` and that manages and logs run-time errors.
+-    The Domian(Core) project is the center of the Clean Architecture design, and all other project dependencies should point toward it. As  such, it has very few external dependencies. The one exception in this case is the System.Reflection.TypeExtensions package, which is used by ValueObject to help implement its IEquatable<> interface. The Core project should include things like:
+        - Models
+        - Domain Services(Contracts)
 
-For calculating the unit-commitment, we prefer you not to rely on an existing (linear-programming) solver but instead write an algorithm yourself.
+# The Configuration Project: 
 
-Implementations can be submitted in either C# (on .Net 5 or higher) or Python (3.8 or higher) as these are (currently) the main languages we use in SPaaS. Along with the implementation should be a README that describes how to compile (if applicable) and launch the application.
+-  The Configuration Project contains all the configurations.
 
-- C# implementations should contain a project file to compile the application. 
-- Python implementations should contain a `requirements.txt` or a `pyproject.toml` (for use with poetry) to install all needed dependencies.
+# The Implementations Project: 
 
-#### Payload
+-  this project contains the implementations of the core logics.
 
-The payload contains 3 types of data:
- - load: The load is the amount of energy (MWh) that need to be generated during one hour.
- - fuels: based on the cost of the fuels of each powerplant, the merit-order can be determined which is the starting point for deciding which powerplants should be switched on and how much power they will deliver.  Wind-turbine are either switched-on, and in that case generate a certain amount of energy depending on the % of wind, or can be switched off. 
-   - gas(euro/MWh): the price of gas per MWh. Thus if gas is at 6 euro/MWh and if the efficiency of the powerplant is 50% (i.e. 2 units of gas will generate one unit of electricity), the cost of generating 1 MWh is 12 euro.
-   - kerosine(euro/Mwh): the price of kerosine per MWh.
-   - co2(euro/ton): the price of emission allowances (optionally to be taken into account).
-   - wind(%): percentage of wind. Example: if there is on average 25% wind during an hour, a wind-turbine with a Pmax of 4 MW will generate 1MWh of energy.
- - powerplants: describes the powerplants at disposal to generate the demanded load. For each powerplant is specified:
-   - name:
-   - type: gasfired, turbojet or windturbine.
-   - efficiency: the efficiency at which they convert a MWh of fuel into a MWh of electrical energy. Wind-turbines do not consume 'fuel' and thus are considered to generate power at zero price.
-   - pmax: the maximum amount of power the powerplant can generate.
-   - pmin: the minimum amount of power the powerplant generates when switched on. 
+# The WEB Project:
 
-#### response
+The entry point of the application is the ASP.NET Core web API, with a public static void Main method in Program.cs. It currently uses the default MVC organization (Controllers and Views folders) as well as most of the default ASP.NET Core project template code. This includes its configuration system, which uses the default appsettings.json file plus environment variables, and is configured in Startup.cs. The project delegates to the Infrastructure project to wire up its services using Configuration project.
 
-The response should be a json as in `example_payloads/response3.json`, which is the expected answer for `example_payloads/payload3.json`, specifying for each powerplant how much power each powerplant should deliver. The power produced by each powerplant has to be a multiple of 0.1 Mw and the sum of the power produced by all the powerplants together should equal the load.
+# The Test Projects: 
 
-### Want more challenge?
+Test projects are organized based on the kind of test (unit, and integration.) 
 
-Having fun with this challenge and want to make it more realistic. Optionally, do one of the extra's below:
+in this project i have implemented the Unit testing using MSUnit and Integration tests using XUnit:
 
-#### Docker
+xunit I'm using xunit because that's what ASP.NET Core uses internally to test the product. It works great and as new versions of ASP.NET Core ship, I'm confident it will continue to work well with it.
 
-Provide a Dockerfile along with the implementation to allow deploying your solution quickly.
+Moq I'm using Moq as a mocking framework for white box behavior-based tests. If I have a method that, under certain circumstances, should perform an action that isn't evident from the object's observable state, mocks provide a way to test that. I could also use my own Fake implementation, but that requires a lot more typing and files. Moq is great once you get the hang of it, and assuming you don't have to mock the world (which we don't in this case because of good, modular design).
 
-#### CO2
+Microsoft.AspNetCore.TestHost I'm using TestHost to test my web project using its full stack, not just unit testing action methods. Using TestHost, you make actual HttpClient requests without going over the wire (so no firewall or port configuration issues). Tests run in memory and are very fast, and requests exercise the full MVC stack, including routing, model binding, model validation, filters, etc.
 
-Taken into account that a gas-fired powerplant also emits CO2, the cost of running the powerplant should also take into account the cost of the [emission allowances](https://en.wikipedia.org/wiki/Carbon_emission_trading).  For this challenge, you may take into account that each MWh generated creates 0.3 ton of CO2. 
+###### Run the Application
 
-## Acceptance criteria
+## using dotnet command
 
-For a submission to be reviewed as part of an application for a position in the team, the project needs to:
-  - contain a README.md explaining how to build and launch the API
-  - expose the API on port `8888`
+navigate to the start up project folder (Web project) using commad
 
-Failing to comply with any of these criteria will automatically disqualify the submission.
+## cd src/web
 
-## More info
+then run 
 
-For more info on energy management, check out:
+## dotnet run web.csproj
 
- - [Global Energy Management Solutions](https://www.youtube.com/watch?v=SAop0RSGdHM)
- - [COO hydroelectric power station](https://www.youtube.com/watch?v=edamsBppnlg)
- - [Management of supply](https://www.youtube.com/watch?v=eh6IIQeeX3c) - video made during winter 2018-2019
+it will build and start the application in http://localhost:8888
 
-## FAQ
+use http://localhost:8888/swagger for swagger documentation.
 
-##### Can an existing solver be used to calculate the unit-commitment
-Implementations should not rely on an external solver and thus contain an algorithm written from scratch (clarified in the text as of version v1.1.0)
+### using Docker
 
+# start the Docker (I am using Docker desktop and linux containers)
+open Docker file location in command prompt, in this project Dockerfile is placed in the Root Directory along with src and tests folders.
+
+run below commad
+# docker build -t power-plant -f Dockerfile .
+
+to make sure image is created use below command
+
+# docker images
+
+it will show list of all the images , you can see power-plant is created.
+
+run the below command to start the application
+
+# docker run -p 8888:8888 power-plant
+
+the docker is designed to expose the http port in 8888
+8888:8888 in this one the first one is the port that you want to access and second 8888 is the container port.
+
+use http://localhost:8888/swagger for swagger documentation.
+
+### using visual studio
+
+open the solution in visual studio and web project as a start up project.
+
+then press the green Start button on the Visual Studio toolbar, or press F5 or Ctrl+F5. 
+
+F5 will start the application in debugger mode. it will open the swagger url automatically in your default browser.
+
+### Test the application using visual studio
+Open Test Explorer. To open Test Explorer, choose Test > Test Explorer from the top menu bar (or press Ctrl + E, T).
+Run your unit tests and integration test by clicking Run All (or press Ctrl + R, V).
+
+Thanks for the Opportunity :)
