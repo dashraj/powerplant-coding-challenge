@@ -31,8 +31,8 @@ namespace Core.Models
 
         public abstract double CostPerUnit();
 
-        public virtual double PoducibleMinimumUnits() => this._powerMinimum;
-        public virtual double PoducibleMaximumUnits()=> this._powerMaximum;
+        public virtual double ProducibleMinimumUnits() => this._powerMinimum;
+        public virtual double ProducibleMaximumUnits()=> this._powerMaximum;
 
     }
 

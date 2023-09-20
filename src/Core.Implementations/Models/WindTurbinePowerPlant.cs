@@ -12,7 +12,7 @@ namespace Implementations.Models
         public override double CostPerUnit() => 0;
 
 
-        public override double PoducibleMaximumUnits()
+        public override double ProducibleMaximumUnits()
         {
             return (_fuel.Wind / 100) * _powerMaximum;
         }
