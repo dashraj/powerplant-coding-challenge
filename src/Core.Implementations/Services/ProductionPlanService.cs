@@ -16,22 +16,67 @@ namespace Core.Implementations.Services
 
         private static IEnumerable<ProductionPlan> CalculateProductionPlansByMeritOrder(IEnumerable<PowerPlant> powerPlants, double load)
         {
-            var productionPlans = CalculateProductionPlansByCostPerUnit(powerPlants, load).ToList();
+            var productionPlans = new List<ProductionPlan>();
+            var powerPlantGroups = powerPlants.OrderBy(x => x.CostPerUnit()).GroupBy(x => x.CostPerUnit()).ToList();
+            var remainingLoad = load;
 
-            var remainingLoad = load - productionPlans.Sum(x => x.Power);
+            foreach (var powerPlantsGroup in powerPlantGroups)
+            {
+                var minPower = powerPlantsGroup.Min(x => x.ProducibleMinimumUnits());
 
-            if (remainingLoad > 0)
+                remainingLoad = load - productionPlans.Sum(x => x.Power);
+
+                if (remainingLoad < minPower)
+                {
+                    break;
+                }
+
+                productionPlans.AddRange(CalculateProductionPlansByCostPerUnit(powerPlantsGroup, remainingLoad).ToList());
+            }
+
+
+            if (productionPlans.Count() != powerPlants.Count())
             {
                 var powerPlantNames = productionPlans.Select(p => p.Name ?? string.Empty).ToHashSet();
 
                 var remainingPowerPlants = powerPlants.Where(x => !powerPlantNames.Contains(x.Name));
 
                 // Append production plans for remaining load
-                var plans = CalculateProductionPlansByMinimumCostToRun(remainingPowerPlants, remainingLoad);
-                productionPlans.AddRange(plans);
+
+                productionPlans.AddRange(CalculateProductionPlansByMinimumCostToRun(remainingPowerPlants, remainingLoad));
+
+
             }
 
-            return productionPlans.OrderBy(x => x.Order).ThenBy(x => x.CostPerUnit);
+            return PlanAdjustments(productionPlans, load).OrderBy(x => x.Order).ThenBy(x => x.CostPerUnit);
+        }
+
+        private static IEnumerable<ProductionPlan> PlanAdjustments(List<ProductionPlan> productionPlans, double load)
+        {
+            if(productionPlans.Sum(x=>x.Power) == load)
+            {
+                return productionPlans;
+            }
+            foreach (var productionPlan in productionPlans.OrderBy(x=>x.Power))
+            {
+                if(productionPlan.Power <= 0)
+                {
+                    continue;
+                }
+                var powerPlant = productionPlans.LastOrDefault(p => p != productionPlan);
+                if(powerPlant?.Power > 0 )
+                {
+                    powerPlant.Power -= productionPlan.Power;
+                }
+                else
+                {
+                    productionPlan.Power = load;
+                }
+                break;
+
+            }
+
+            return productionPlans;
         }
 
         private static IEnumerable<ProductionPlan> CalculateProductionPlansByMinimumCostToRun(IEnumerable<PowerPlant> powerPlants, double remainingLoad)
@@ -54,6 +99,7 @@ namespace Core.Implementations.Services
 
                 // Create and add production plan
                 productionPlans.Add(CreateProductionPlan(remainingLoad, powerPlant, powerToProduce));
+                
             }
 
             return productionPlans;
@@ -64,7 +110,7 @@ namespace Core.Implementations.Services
             var productionPlans = new List<ProductionPlan>();
             var remainingLoad = load;
 
-            foreach (var powerPlant in powerPlants.OrderBy(p => p.CostPerUnit()))
+            foreach (var powerPlant in powerPlants)
             {
                 if (remainingLoad > 0 && remainingLoad < powerPlant.ProducibleMinimumUnits())
                 {
@@ -77,10 +123,18 @@ namespace Core.Implementations.Services
                 {
                     powerToProduce = Math.Min(remainingLoad, powerPlant.ProducibleMaximumUnits());
 
+                    var nextPP = powerPlants.FirstOrDefault(pp => pp != powerPlant && pp.ProducibleMinimumUnits() > 0 && !productionPlans.Select(x=>x.Name).Contains(pp.Name));
+
+                    double remaining = remainingLoad - powerToProduce;
+
+                    if ( remaining > 0 && remaining < nextPP?.ProducibleMinimumUnits())
+                    {
+                        powerToProduce = Math.Min(remainingLoad, powerPlant.ProducibleMaximumUnits() - nextPP.ProducibleMinimumUnits());
+                    }
+
                     remainingLoad -= powerToProduce;
                 }
 
-                // Create and add production plan
                 productionPlans.Add(CreateProductionPlan(remainingLoad, powerPlant, powerToProduce));
             }
 
@@ -103,7 +157,7 @@ namespace Core.Implementations.Services
         {
             return powerPlant.ProducibleMinimumUnits() > 0
                 ? powerPlant.ProducibleMinimumUnits()
-                : remainingLoad >0 && remainingLoad < powerPlant.ProducibleMaximumUnits()
+                : remainingLoad > 0 && remainingLoad < powerPlant.ProducibleMaximumUnits()
                     ? remainingLoad
                     : powerPlant.ProducibleMaximumUnits();
         }
