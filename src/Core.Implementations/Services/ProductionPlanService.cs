@@ -7,6 +7,11 @@ namespace Core.Implementations.Services
     {
         public async Task<IEnumerable<ProductionPlan>> GetProductionPlansAsync(IEnumerable<PowerPlant> powerPlants, double load)
         {
+            if(load > powerPlants.Sum(x => x.ProducibleMaximumUnits()))
+            {
+                throw new Exception("The given load is greater than the maximum producible power by Powerplants");
+            }
+
             // Calculate production plans by merit order
             var finalPlans = CalculateProductionPlansByMeritOrder(powerPlants, load);
 

@@ -22,6 +22,8 @@ namespace Web.Controllers
             {
                 throw new BadHttpRequestException("Invalid input. Model validation failed.");
             }
+
+            if(requestDto.Load < 1) { throw new BadHttpRequestException("Load is not valid"); }
             return await manager.GetProductionPlansAsync(requestDto);
         }
     }
